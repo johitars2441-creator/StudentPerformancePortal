@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Student Analytics Report</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            background: #f4f6fa;
+        }
+
+        .report-card {
+            border: none;
+            border-radius: 12px;
+        }
+
+        .metric {
+            font-size: 1.7rem;
+            font-weight: 700;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-primary no-print">
+    <div class="container">
+        <span class="navbar-brand">
+            Student Performance Portal — Admin
+        </span>
+
+        <a href="/analytics/dashboard/" class="btn btn-light btn-sm">
+            Back to Dashboard
+        </a>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Student Analytics Report</h2>
+            <p class="text-muted mb-0">
+                Individual academic performance and attendance
+            </p>
+        </div>
+
+        <button
+            type="button"
+            onclick="window.print()"
+            class="btn btn-outline-primary no-print"
+        >
+            Print Report
+        </button>
+    </div>
+
+    {% if no_students %}
+
+        <div class="alert alert-info">
+            No students have been registered yet.
+        </div>
+
+    {% else %}
+
+        <!-- Student selector -->
+        <div class="card report-card shadow-sm mb-4 no-print">
+            <div class="card-body">
+
+                <form method="get" action="{% url 'student_analytics_report' %}">
+                    <label for="student_id" class="form-label fw-bold">
+                        Select Student
+                    </label>
+
+                    <div class="input-group">
+                        <select
+                            name="student_id"
+                            id="student_id"
+                            class="form-select"
+                            required
+                        >
+                            {% for item in students %}
+                                <option
+                                    value="{{ item.id }}"
+                                    {% if selected_student.id == item.id %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ item.roll_number }} — {{ item.full_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <button class="btn btn-primary" type="submit">
+                            View Report
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Student details -->
+        <div class="card report-card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h4 class="fw-bold">
+                    {{ selected_student.full_name }}
+                </h4>
+
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <strong>Roll Number:</strong>
+                        {{ selected_student.roll_number }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Department:</strong>
+                        {{ selected_student.department }}
+                    </div>
+
+                    <div class="col-md-4">
+                        <strong>Email:</strong>
+                        {{ selected_student.email }}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Overall Average</h6>
+
+                        <div class="metric">
+                            {% if overall_average != None %}
+                                {{ overall_average }}%
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </div>
+
+                        <small class="text-muted">
+                            {% if is_complete %}
+                                Final average
+                            {% else %}
+                                Based on recorded assessments
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Overall Grade</h6>
+
+                        <div class="metric">
+                            {% if overall_grade %}
+                                {{ overall_grade }}
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Result Status</h6>
+
+                        <div class="metric fs-4">
+                            {{ result_status }}
+                        </div>
+
+                        {% if not is_complete %}
+                            <small class="text-muted">
+                                Provisional result
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Attendance</h6>
+
+                        <div class="metric">
+                            {{ attendance_percentage }}%
+                        </div>
+
+                        <small class="text-muted">
+                            {{ total_attendance }} recorded sessions
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Assessments Recorded</h6>
+
+                        <div class="metric">
+                            {{ total_assessments }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card report-card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted">Final Class Rank</h6>
+
+                        <div class="metric">
+                            {% if final_rank %}
+                                #{{ final_rank }}
+                            {% else %}
+                                Not Ranked
+                            {% endif %}
+                        </div>
+
+                        <small class="text-muted">
+                            {% if not is_complete %}
+                                Requires all assessments
+                            {% else %}
+                                Among students with complete results
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {% if not is_complete %}
+            <div class="alert alert-warning">
+                <strong>Incomplete assessments:</strong>
+                This student's results are provisional until every
+                required assessment is recorded for every subject.
+            </div>
+        {% endif %}
+
+        <!-- Subject-wise analytics -->
+        <div class="card report-card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h4 class="fw-bold mb-3">
+                    Subject-wise Performance
+                </h4>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Assessments Recorded</th>
+                                <th>Average</th>
+                                <th>Grade</th>
+                                <th>Completion</th>
+                                <th>Pending Assessments</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in subject_reports %}
+                                <tr>
+                                    <td>{{ item.subject.subject_name }}</td>
+
+                                    <td>
+                                        {{ item.assessment_count }} / 3
+                                    </td>
+
+                                    <td>
+                                        {% if item.average != None %}
+                                            {{ item.average }}%
+                                        {% else %}
+                                            Pending
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ item.grade|default:"-" }}
+                                    </td>
+
+                                    <td>
+                                        {% if item.complete %}
+                                            <span class="badge bg-success">
+                                                Complete
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">
+                                                Incomplete
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if item.pending_exams %}
+                                            {{ item.pending_exams|join:", " }}
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        No subjects have been created.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Assessment-by-assessment detail -->
+        <div class="card report-card shadow-sm mb-4">
+            <div class="card-body">
+
+                <h4 class="fw-bold mb-3">
+                    Individual Assessment Results
+                </h4>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Subject</th>
+                                <th>Assessment</th>
+                                <th>Marks</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for item in subject_reports %}
+                                {% for mark in item.marks %}
+                                    <tr>
+                                        <td>{{ item.subject.subject_name }}</td>
+                                        <td>{{ mark.get_exam_type_display }}</td>
+                                        <td>
+                                            {{ mark.marks_obtained }} /
+                                            {{ mark.max_marks }}
+                                        </td>
+                                        <td>{{ mark.percentage }}%</td>
+                                        <td>{{ mark.grade }}</td>
+                                        <td>{{ mark.exam_date }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        No assessment records found.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>
