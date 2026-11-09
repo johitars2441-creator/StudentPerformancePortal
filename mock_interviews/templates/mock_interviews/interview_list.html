@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Mock Interviews | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-camera-video text-primary me-2"></i>Mock Interview Management</h2>
+        <p class="text-muted mb-0">Schedule one-on-one video interviews (Google Meet / Zoom), dispatch invites, and record feedback.</p>
+    </div>
+    <a href="{% url 'mock_interviews:schedule_interview' %}" class="btn btn-primary">
+        <i class="bi bi-calendar-plus me-1"></i> Schedule Interview
+    </a>
+</div>
+
+{% if interviews %}
+    <div class="card card-custom p-4 bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th>Student</th>
+                        <th>Roll Number</th>
+                        <th>Batch</th>
+                        <th>Subject</th>
+                        <th>Scheduled Date & Time</th>
+                        <th>Platform & Link</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interview in interviews %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ interview.student.full_name }}</div>
+                                <div class="text-muted small">{{ interview.student.email }}</div>
+                            </td>
+                            <td class="font-monospace text-primary small">{{ interview.student.roll_number }}</td>
+                            <td><span class="badge bg-primary-subtle text-primary">{{ interview.batch.batch_code }}</span></td>
+                            <td class="fw-semibold">{{ interview.subject.subject_name }}</td>
+                            <td>
+                                <div>{{ interview.scheduled_datetime|date:"M d, Y" }}</div>
+                                <div class="text-muted small">{{ interview.scheduled_datetime|date:"h:i A" }} ({{ interview.duration_minutes }}m)</div>
+                            </td>
+                            <td>
+                                <a href="{{ interview.meeting_url }}" target="_blank" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+                                    <i class="bi bi-box-arrow-up-right"></i> {{ interview.get_meeting_platform_display }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if interview.status == 'COMPLETED' %}
+                                    <span class="badge bg-success-subtle text-success">Completed</span>
+                                {% elif interview.status == 'ABSENT' %}
+                                    <span class="badge bg-danger-subtle text-danger">Absent</span>
+                                {% else %}
+                                    <span class="badge bg-primary-subtle text-primary">Scheduled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if interview.marks_obtained is not None %}
+                                    <span class="fw-bold text-success">{{ interview.marks_obtained }}</span> / {{ interview.max_marks }}
+                                {% else %}
+                                    <span class="text-muted small">Not graded</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'mock_interviews:evaluate_interview' interview.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil-square me-1"></i> Grade & Feedback
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="card card-custom p-5 text-center bg-white">
+        <i class="bi bi-camera-video display-4 text-muted mb-3"></i>
+        <h4 class="fw-bold">No Mock Interviews Scheduled</h4>
+        <p class="text-muted small">Create mock interview slots, provide a Google Meet or Zoom link, and an invitation email will be automatically sent to the student.</p>
+        <div class="mt-2">
+            <a href="{% url 'mock_interviews:schedule_interview' %}" class="btn btn-primary">
+                <i class="bi bi-calendar-plus me-1"></i> Schedule First Interview
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

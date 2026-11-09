@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}My Assessments | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold mb-1"><i class="bi bi-mortarboard text-primary me-2"></i>My Batch Assessments</h2>
+    <p class="text-muted mb-0">Cohort: <span class="fw-bold text-primary font-monospace">{{ student.batch.batch_code }}</span> ({{ student.batch.batch_name }})</p>
+</div>
+
+<div class="alert alert-warning card-custom p-3 mb-4">
+    <div class="d-flex align-items-start gap-3">
+        <i class="bi bi-shield-exclamation text-warning fs-3"></i>
+        <div>
+            <h6 class="fw-bold mb-1">Strict Exam Integrity Rules</h6>
+            <ul class="mb-0 small text-muted">
+                <li>Tests must be taken in <strong>Fullscreen Mode</strong> within the active time window.</li>
+                <li><strong>1-Warning Tab-Switch Policy:</strong> You are granted at most 1 warning if you switch tabs or minimize the window. A second switch will <strong>immediately terminate and submit</strong> your test.</li>
+                <li>Copying text, cutting, right-clicking, and screenshot keys are disabled.</li>
+                <li>The test will automatically submit when the countdown timer reaches zero. If you fail to attend within the window, you will be marked <strong>Absent</strong>.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if test_cards %}
+    <div class="row g-4">
+        {% for item in test_cards %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-custom h-100 p-3 bg-white">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-light text-dark border">{{ item.test.subject.subject_name }}</span>
+                            {% if item.test.test_type == 'CODING' %}
+                                <span class="badge bg-dark"><i class="bi bi-code-slash me-1"></i>Coding</span>
+                            {% else %}
+                                <span class="badge bg-info text-dark"><i class="bi bi-list-check me-1"></i>MCQ</span>
+                            {% endif %}
+                        </div>
+
+                        <h4 class="card-title fw-bold text-dark mt-2 mb-1">{{ item.test.title }}</h4>
+                        <p class="text-muted small flex-grow-1">
+                            {{ item.test.description|default:"Standard batch assessment module."|truncatechars:120 }}
+                        </p>
+
+                        <div class="p-2 rounded bg-light small mb-3">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Total Marks:</span>
+                                <span class="fw-bold text-primary">{{ item.test.total_marks }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Duration:</span>
+                                <span class="fw-semibold">{{ item.test.duration_minutes }} Mins</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Deadline:</span>
+                                <span class="text-muted">{{ item.test.end_window|date:"M d, H:i"|default:"Open" }}</span>
+                            </div>
+                        </div>
+
+                        {% if item.attempt %}
+                            {% if item.attempt.status == 'SUBMITTED' or item.attempt.status == 'TIMED_OUT' %}
+                                <div class="alert alert-success py-2 px-3 small text-center mb-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Completed: <strong>{{ item.attempt.total_score }}/{{ item.attempt.max_marks }}</strong>
+                                </div>
+                                <a href="{% url 'tests_module:test_result' item.attempt.id %}" class="btn btn-outline-success btn-sm w-100">
+                                    <i class="bi bi-bar-chart me-1"></i> View Result & AI Feedback
+                                </a>
+                            {% elif item.attempt.status == 'FORCE_SUBMITTED' %}
+                                <div class="alert alert-danger py-2 px-3 small text-center mb-2">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Terminated (Tab Violation): <strong>{{ item.attempt.total_score }}/{{ item.attempt.max_marks }}</strong>
+                                </div>
+                                <a href="{% url 'tests_module:test_result' item.attempt.id %}" class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="bi bi-eye me-1"></i> View Incident Report
+                                </a>
+                            {% elif item.attempt.status == 'ABSENT' %}
+                                <div class="alert alert-secondary py-2 px-3 small text-center mb-0">
+                                    <i class="bi bi-dash-circle me-1"></i> Marked Absent (Window Expired)
+                                </div>
+                            {% elif item.attempt.status == 'IN_PROGRESS' %}
+                                <a href="{% url 'tests_module:take_test' item.test.id %}" class="btn btn-warning btn-sm w-100 fw-bold">
+                                    <i class="bi bi-play-circle me-1"></i> Resume Test in Progress
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            {% if item.is_open %}
+                                <a href="{% url 'tests_module:take_test' item.test.id %}" class="btn btn-primary btn-sm w-100 fw-semibold">
+                                    <i class="bi bi-play-circle-fill me-1"></i> Start Proctored Test
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    Test Window Closed
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card card-custom p-5 text-center bg-white">
+        <i class="bi bi-inbox text-muted display-4 mb-3"></i>
+        <h4 class="fw-bold">No Tests Available</h4>
+        <p class="text-muted small">Your instructors have not published any tests for your batch yet.</p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}My Mock Interviews | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold mb-1"><i class="bi bi-camera-video text-primary me-2"></i>My Mock Interviews</h2>
+    <p class="text-muted mb-0">Cohort: <span class="fw-bold text-primary font-monospace">{{ student.batch.batch_code }}</span></p>
+</div>
+
+{% if interviews %}
+    <div class="row g-4">
+        {% for item in interviews %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-custom h-100 p-4 bg-white d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary-subtle text-primary">{{ item.subject.subject_name }}</span>
+                        {% if item.status == 'COMPLETED' %}
+                            <span class="badge bg-success-subtle text-success">Completed</span>
+                        {% elif item.status == 'ABSENT' %}
+                            <span class="badge bg-danger-subtle text-danger">Absent</span>
+                        {% else %}
+                            <span class="badge bg-info-subtle text-info">Upcoming</span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-bold text-dark mt-2 mb-1">Interviewer: {{ item.staff.get_full_name|default:item.staff.username }}</h5>
+                    <div class="text-muted small mb-3">
+                        <i class="bi bi-calendar-event me-1"></i> {{ item.scheduled_datetime|date:"M d, Y - h:i A" }}
+                        <span class="ms-2">({{ item.duration_minutes }} mins)</span>
+                    </div>
+
+                    {% if item.status == 'SCHEDULED' %}
+                        <div class="p-3 bg-light rounded border mb-3 flex-grow-1">
+                            <div class="small fw-semibold mb-1">Meeting Link:</div>
+                            <a href="{{ item.meeting_url }}" target="_blank" class="btn btn-primary btn-sm w-100">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Join {{ item.get_meeting_platform_display }}
+                            </a>
+                            {% if item.instructions %}
+                                <div class="text-muted small mt-2"><strong>Notes:</strong> {{ item.instructions }}</div>
+                            {% endif %}
+                        </div>
+                    {% elif item.status == 'COMPLETED' %}
+                        <div class="p-3 bg-light rounded border mb-3 flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Score:</span>
+                                <span class="fw-bold fs-5 text-primary">{{ item.marks_obtained }} / {{ item.max_marks }}</span>
+                            </div>
+                            <div class="row text-center g-2 small mb-2">
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-white border">
+                                        <div class="fw-bold">{{ item.technical_rating|default:"-" }}/10</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">Tech</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-white border">
+                                        <div class="fw-bold">{{ item.problem_solving_rating|default:"-" }}/10</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">Problem</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-white border">
+                                        <div class="fw-bold">{{ item.communication_rating|default:"-" }}/10</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">Comm</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if item.feedback_notes %}
+                                <div class="small text-muted mb-1"><strong>Feedback:</strong> {{ item.feedback_notes|truncatechars:100 }}</div>
+                            {% endif %}
+                            {% if item.strengths %}
+                                <div class="small text-success mb-1"><strong>Strengths:</strong> {{ item.strengths|truncatechars:100 }}</div>
+                            {% endif %}
+                            {% if item.areas_for_improvement %}
+                                <div class="small text-danger"><strong>Improvement:</strong> {{ item.areas_for_improvement|truncatechars:100 }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card card-custom p-5 text-center bg-white">
+        <i class="bi bi-camera-video display-4 text-muted mb-3"></i>
+        <h4 class="fw-bold">No Mock Interviews Found</h4>
+        <p class="text-muted small">You currently have no scheduled or past mock interviews.</p>
+    </div>
+{% endif %}
+{% endblock %}

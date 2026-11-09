@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Mock Interview | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <a href="{% url 'mock_interviews:interview_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="fw-bold mb-0">Schedule Mock Interview</h3>
+                    <p class="text-muted small mb-0">An invitation email will be dispatched to the candidate automatically.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Batch <span class="text-danger">*</span></label>
+                        {{ form.batch }}
+                        {% if form.batch.errors %}<div class="text-danger small">{{ form.batch.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+                        {{ form.subject }}
+                        {% if form.subject.errors %}<div class="text-danger small">{{ form.subject.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Candidate Student <span class="text-danger">*</span></label>
+                    {{ form.student }}
+                    {% if form.student.errors %}<div class="text-danger small">{{ form.student.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold">Interview Date & Time <span class="text-danger">*</span></label>
+                        {{ form.scheduled_datetime }}
+                        {% if form.scheduled_datetime.errors %}<div class="text-danger small">{{ form.scheduled_datetime.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Duration (Minutes)</label>
+                        {{ form.duration_minutes }}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Platform</label>
+                        {{ form.meeting_platform }}
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold">Meeting Link (Google Meet / Zoom) <span class="text-danger">*</span></label>
+                        {{ form.meeting_url }}
+                        {% if form.meeting_url.errors %}<div class="text-danger small">{{ form.meeting_url.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Instructions & Topics</label>
+                    {{ form.instructions }}
+                    <div class="form-text">Will be included in the invitation email sent to the student.</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'mock_interviews:interview_list' %}" class="btn btn-light">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-send-check me-1"></i> Schedule & Send Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

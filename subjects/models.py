@@ -1,4 +1,5 @@
 from django.db import models
+from batches.models import Batch
 
 
 class Subject(models.Model):
@@ -9,6 +10,12 @@ class Subject(models.Model):
 
     subject_name = models.CharField(
         max_length=100
+    )
+
+    batches = models.ManyToManyField(
+        Batch,
+        related_name='subjects',
+        blank=True
     )
 
     max_marks = models.PositiveIntegerField(default=100)

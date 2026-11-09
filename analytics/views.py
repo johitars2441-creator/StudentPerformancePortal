@@ -567,3 +567,27 @@ def student_analytics_report(request):
         'analytics/student_report.html',
         context
     )
+
+
+from django.http import FileResponse
+from .pdf_generator import generate_student_pdf_report
+from accounts.decorators import get_user_role, can_access_batch
+from django.shortcuts import get_object_or_404
+
+
+@login_required
+def download_student_pdf(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    role = get_user_role(request.user)
+
+    if role == 'STUDENT':
+        if not hasattr(request.user, 'student') or request.user.student.id != student.id:
+            return HttpResponseForbidden("You can only download your own performance transcript.")
+    elif role == 'STAFF':
+        if student.batch and not can_access_batch(request.user, student.batch):
+            return HttpResponseForbidden("Permission denied for this batch.")
+
+    buffer = generate_student_pdf_report(student)
+    filename = f"Performance_Card_{student.roll_number}.pdf"
+    return FileResponse(buffer, as_attachment=True, filename=filename, content_type='application/pdf')
+

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Staff to {{ batch.batch_code }} | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="{% url 'batches:batch_detail' batch.id %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h4 class="fw-bold mb-0">Assign Staff Members</h4>
+                    <p class="text-muted small mb-0">Batch: <span class="fw-bold font-monospace">{{ batch.batch_code }}</span> ({{ batch.batch_name }})</p>
+                </div>
+            </div>
+
+            <p class="text-muted small">
+                Select the staff members who should have full management access to this batch (including adding students, creating AI tests, and scheduling mock interviews).
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                {% if staff_users %}
+                    <div class="list-group mb-4">
+                        {% for staff_user in staff_users %}
+                            <label class="list-group-item d-flex align-items-center gap-3 p-3 border rounded mb-2">
+                                <input 
+                                    class="form-check-input flex-shrink-0" 
+                                    type="checkbox" 
+                                    name="staff_ids" 
+                                    value="{{ staff_user.id }}"
+                                    {% if staff_user.id in currently_assigned_ids %}checked{% endif %}
+                                >
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ staff_user.get_full_name|default:staff_user.username }}</div>
+                                    <div class="text-muted small">{{ staff_user.email }} &middot; @{{ staff_user.username }}</div>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        No staff accounts found in the portal. 
+                        <a href="{% url 'batches:create_staff' %}" class="alert-link">Create a staff account first</a>.
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'batches:batch_detail' batch.id %}" class="btn btn-light">Cancel</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-check2-circle me-1"></i> Save Staff Assignments
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

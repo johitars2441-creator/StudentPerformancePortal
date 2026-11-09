@@ -41,11 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Project apps
     'accounts',
+    'batches',
     'students',
     'subjects',
     'marks',
     'attendance',
     'analytics',
+    'tests_module',
+    'mock_interviews',
 
     # Third-party app
     'rest_framework',

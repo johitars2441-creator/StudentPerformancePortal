@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ batch.batch_code }} - {{ batch.batch_name }} | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'batches:batch_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary font-monospace fs-6">{{ batch.batch_code }}</span>
+                {% if batch.is_active %}
+                    <span class="badge bg-success-subtle text-success">Active Cohort</span>
+                {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                {% endif %}
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">{{ batch.batch_name }}</h2>
+        </div>
+    </div>
+    
+    <div class="d-flex gap-2">
+        <a href="{% url 'batches:enroll_student' batch.id %}" class="btn btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Enroll Student
+        </a>
+        {% if is_admin %}
+            <a href="{% url 'batches:batch_assign_staff' batch.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-person-gear me-1"></i> Manage Staff
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Batch Metadata Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Batch Details</h5>
+            <p class="text-muted small mb-3">{{ batch.description|default:"No description provided for this batch." }}</p>
+
+            <ul class="list-unstyled mb-0 small">
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">Start Date:</span>
+                    <span class="fw-semibold">{{ batch.start_date|default:"Not set" }}</span>
+                </li>
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">End Date:</span>
+                    <span class="fw-semibold">{{ batch.end_date|default:"Not set" }}</span>
+                </li>
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">Enrolled Students:</span>
+                    <span class="fw-bold text-primary">{{ students.count }}</span>
+                </li>
+                <li class="py-2 d-flex justify-content-between">
+                    <span class="text-muted">Assigned Staff:</span>
+                    <span class="fw-bold text-secondary">{{ staff_assignments.count }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Assigned Staff List -->
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-badge text-primary me-2"></i>Assigned Staff</h5>
+                {% if is_admin %}
+                    <a href="{% url 'batches:batch_assign_staff' batch.id %}" class="btn btn-sm btn-link p-0 text-decoration-none">Edit</a>
+                {% endif %}
+            </div>
+
+            {% if staff_assignments %}
+                <div class="list-group list-group-flush">
+                    {% for assignment in staff_assignments %}
+                        <div class="list-group-item px-0 py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">{{ assignment.staff.get_full_name|default:assignment.staff.username }}</div>
+                                <div class="text-muted small">{{ assignment.staff.email }}</div>
+                            </div>
+                            <span class="badge bg-light text-dark border">Faculty</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted small mb-0">No staff members have been assigned to this batch yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Enrolled Students Table -->
+    <div class="col-lg-8">
+        <div class="card card-custom p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-people text-primary me-2"></i>Enrolled Students</h5>
+                    <p class="text-muted small mb-0">Students in this batch. Only Staff and Admin can enroll students.</p>
+                </div>
+                <a href="{% url 'batches:enroll_student' batch.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Add Student
+                </a>
+            </div>
+
+            {% if students %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Roll Number</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Admission Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr>
+                                    <td class="font-monospace fw-bold text-primary">{{ student.roll_number }}</td>
+                                    <td class="fw-semibold">{{ student.full_name }}</td>
+                                    <td class="text-muted small">{{ student.email }}</td>
+                                    <td>{{ student.department|default:"-" }}</td>
+                                    <td class="text-muted small">{{ student.admission_date }}</td>
+                                    <td class="text-end">
+                                        <a href="/analytics/student-report/{{ student.id }}/" class="btn btn-sm btn-outline-secondary" title="View Performance Report">
+                                            <i class="bi bi-bar-chart"></i> Report
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people display-4 text-muted mb-3"></i>
+                    <h5 class="fw-bold">No Students Enrolled</h5>
+                    <p class="text-muted small">No students have been enrolled in this batch yet. Students cannot self-register.</p>
+                    <a href="{% url 'batches:enroll_student' batch.id %}" class="btn btn-primary btn-sm mt-2">
+                        <i class="bi bi-person-plus me-1"></i> Enroll First Student
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

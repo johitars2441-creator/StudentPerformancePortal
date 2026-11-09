@@ -17,12 +17,17 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from accounts.views import role_redirect
 
 urlpatterns = [
+    path('', role_redirect, name='home'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('analytics/', include('analytics.urls')),
     path('accounts/', include('accounts.urls')),
+    path('batches/', include('batches.urls')),
+    path('tests/', include('tests_module.urls')),
+    path('mock-interviews/', include('mock_interviews.urls')),
     path('student/', include('students.urls')),
     path('subjects/', include('subjects.urls')),
     path('marks/', include('marks.urls')),

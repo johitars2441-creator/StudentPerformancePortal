@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Result: {{ test.title }} | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'tests_module:student_portal' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary font-monospace">{{ test.batch.batch_code }}</span>
+                <span class="badge bg-secondary">{{ test.subject.subject_name }}</span>
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">Assessment Performance Report</h2>
+        </div>
+    </div>
+
+    <div>
+        <a href="/student/dashboard/" class="btn btn-primary">
+            <i class="bi bi-speedometer2 me-1"></i> My Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Score Summary Card -->
+    <div class="col-md-4">
+        <div class="card card-custom p-4 bg-white text-center h-100">
+            <h6 class="text-muted text-uppercase fw-semibold mb-2">Total Score</h6>
+            <div class="display-4 fw-bold text-primary mb-2">
+                {{ attempt.total_score }} <span class="fs-4 text-muted fw-normal">/ {{ attempt.max_marks }}</span>
+            </div>
+            <div class="fs-5 fw-bold text-success mb-3">{{ attempt.percentage }}%</div>
+
+            <div class="p-2 rounded bg-light small mb-2 d-flex justify-content-between">
+                <span class="text-muted">Batch Rank:</span>
+                <span class="fw-bold text-primary">#{{ rank }} of {{ total_takers }}</span>
+            </div>
+
+            <div class="p-2 rounded bg-light small d-flex justify-content-between">
+                <span class="text-muted">Proctoring Status:</span>
+                {% if attempt.status == 'SUBMITTED' %}
+                    <span class="badge bg-success">Clean Submission</span>
+                {% elif attempt.status == 'FORCE_SUBMITTED' %}
+                    <span class="badge bg-danger">Terminated (Tab Violation)</span>
+                {% elif attempt.status == 'TIMED_OUT' %}
+                    <span class="badge bg-warning text-dark">Timeout Auto-Submit</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ attempt.status }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Student & Integrity Metadata -->
+    <div class="col-md-8">
+        <div class="card card-custom p-4 bg-white h-100">
+            <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Assessment & Integrity Details</h5>
+            <div class="row g-3 small">
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Candidate:</span>
+                    <strong class="fs-6">{{ attempt.student.full_name }}</strong> ({{ attempt.student.roll_number }})
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Assessment:</span>
+                    <strong class="fs-6">{{ test.title }}</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Test Type:</span>
+                    <span class="badge bg-dark">{{ test.get_test_type_display }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Submission Time:</span>
+                    <span>{{ attempt.submit_time|date:"M d, Y - H:i:s" }}</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Tab Switches Detected:</span>
+                    {% if attempt.tab_switch_count > 0 %}
+                        <span class="text-danger fw-bold">{{ attempt.tab_switch_count }} switch(es)</span>
+                    {% else %}
+                        <span class="text-success fw-bold">0 (Clean focus maintained)</span>
+                    {% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block">Duration Spent:</span>
+                    <span>Completed within {{ test.duration_minutes }} minutes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if test.test_type == 'CODING' and coding_answer %}
+    <!-- AI Code Evaluation Breakdown -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-robot text-primary me-2"></i>Google Gemini AI Code Evaluation
+            </h4>
+            <span class="badge bg-primary fs-6">{{ coding_answer.marks_obtained }} / {{ coding_answer.question.marks }} Marks</span>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="p-3 rounded bg-light border h-100">
+                    <h6 class="fw-bold text-primary mb-2"><i class="bi bi-check2-circle me-1"></i>Logical Correctness</h6>
+                    <p class="small text-muted mb-0">{{ coding_answer.ai_correctness_notes|default:"Code satisfies functional problem requirements." }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded bg-light border h-100">
+                    <h6 class="fw-bold text-success mb-2"><i class="bi bi-bounding-box-circles me-1"></i>Edge-Case Resilience</h6>
+                    <p class="small text-muted mb-0">{{ coding_answer.ai_edge_case_notes|default:"Handled boundary constraints effectively." }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded bg-light border h-100">
+                    <h6 class="fw-bold text-info mb-2"><i class="bi bi-code-square me-1"></i>Code Quality & Readability</h6>
+                    <p class="small text-muted mb-0">{{ coding_answer.ai_code_quality_notes|default:"Clean code formatting and structure." }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded bg-light border h-100">
+                    <h6 class="fw-bold text-warning mb-2"><i class="bi bi-speedometer me-1"></i>Algorithmic Complexity</h6>
+                    <p class="small text-muted mb-0">{{ coding_answer.ai_complexity_notes|default:"Optimal runtime and space utilization." }}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if coding_answer.ai_suggestions %}
+            <div class="alert alert-info p-3 rounded mb-4">
+                <h6 class="fw-bold mb-1"><i class="bi bi-lightbulb-fill text-warning me-1"></i>AI Improvement Recommendations</h6>
+                <div class="small">{{ coding_answer.ai_suggestions }}</div>
+            </div>
+        {% endif %}
+
+        <div>
+            <h6 class="fw-bold mb-2">Submitted Notepad Solution:</h6>
+            <pre class="p-3 bg-dark text-info rounded font-monospace small" style="max-height: 350px; overflow-y: auto;">{{ coding_answer.submitted_code|default:"No code was entered." }}</pre>
+        </div>
+    </div>
+
+{% elif test.test_type == 'MCQ' and mcq_answers %}
+    <!-- MCQ Review Section -->
+    <div class="card card-custom p-4 bg-white mb-4">
+        <h4 class="fw-bold mb-3"><i class="bi bi-list-check text-primary me-2"></i>Question-by-Question Review</h4>
+
+        <div class="accordion" id="resultsAccordion">
+            {% for ans in mcq_answers %}
+                <div class="accordion-item mb-2 border rounded">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed py-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#ans{{ ans.id }}">
+                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                <span>Q{{ forloop.counter }}. {{ ans.question.question_text|truncatechars:65 }}</span>
+                                {% if ans.is_correct %}
+                                    <span class="badge bg-success ms-2">+{{ ans.marks_obtained }}M</span>
+                                {% else %}
+                                    <span class="badge bg-danger ms-2">0M</span>
+                                {% endif %}
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="ans{{ ans.id }}" class="accordion-collapse collapse">
+                        <div class="accordion-body small bg-light">
+                            <p class="fw-semibold text-dark mb-2">{{ ans.question.question_text }}</p>
+                            <div class="row g-2 mb-2">
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded {% if ans.selected_option == 'A' and ans.is_correct %}bg-success text-white{% elif ans.selected_option == 'A' %}bg-danger text-white{% endif %}">
+                                        A: {{ ans.question.option_a }}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded {% if ans.selected_option == 'B' and ans.is_correct %}bg-success text-white{% elif ans.selected_option == 'B' %}bg-danger text-white{% endif %}">
+                                        B: {{ ans.question.option_b }}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded {% if ans.selected_option == 'C' and ans.is_correct %}bg-success text-white{% elif ans.selected_option == 'C' %}bg-danger text-white{% endif %}">
+                                        C: {{ ans.question.option_c }}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="p-2 border rounded {% if ans.selected_option == 'D' and ans.is_correct %}bg-success text-white{% elif ans.selected_option == 'D' %}bg-danger text-white{% endif %}">
+                                        D: {{ ans.question.option_d }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-muted">
+                                <strong>Your Selection:</strong> Option {{ ans.selected_option|default:"None" }} &middot;
+                                <strong class="text-success">Correct Option:</strong> Option {{ ans.question.correct_option }}
+                            </div>
+                            {% if ans.question.explanation %}
+                                <div class="mt-1 text-muted"><em>Explanation:</em> {{ ans.question.explanation }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

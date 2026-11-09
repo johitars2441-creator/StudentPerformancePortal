@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ test.title }} | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'tests_module:test_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary font-monospace">{{ test.batch.batch_code }}</span>
+                <span class="badge bg-secondary">{{ test.subject.subject_name }}</span>
+                {% if test.test_type == 'CODING' %}
+                    <span class="badge bg-dark"><i class="bi bi-code-slash me-1"></i>Coding</span>
+                {% else %}
+                    <span class="badge bg-info text-dark"><i class="bi bi-list-check me-1"></i>MCQ</span>
+                {% endif %}
+                {% if test.is_published %}
+                    <span class="badge bg-success-subtle text-success">Published</span>
+                {% else %}
+                    <span class="badge bg-warning-subtle text-warning">Draft</span>
+                {% endif %}
+            </div>
+            <h2 class="fw-bold mb-0 mt-1">{{ test.title }}</h2>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a href="{% url 'tests_module:toggle_publish' test.id %}" class="btn {% if test.is_published %}btn-outline-warning{% else %}btn-success{% endif %}">
+            {% if test.is_published %}
+                <i class="bi bi-eye-slash me-1"></i> Unpublish
+            {% else %}
+                <i class="bi bi-send me-1"></i> Publish to Students
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Test Info Summary Card -->
+    <div class="col-lg-4">
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Test Specifications</h5>
+            <ul class="list-unstyled mb-0 small">
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">Total Marks:</span>
+                    <span class="fw-bold fs-6 text-primary">{{ test.total_marks }}</span>
+                </li>
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">Duration:</span>
+                    <span class="fw-semibold">{{ test.duration_minutes }} minutes</span>
+                </li>
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">Start Window:</span>
+                    <span class="fw-semibold">{{ test.start_window|default:"Anytime" }}</span>
+                </li>
+                <li class="py-2 border-bottom d-flex justify-content-between">
+                    <span class="text-muted">End Window:</span>
+                    <span class="fw-semibold">{{ test.end_window|default:"Open" }}</span>
+                </li>
+                <li class="py-2 d-flex justify-content-between">
+                    <span class="text-muted">Total Submissions:</span>
+                    <span class="fw-bold text-success">{{ attempts.count }}</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Questions Preview -->
+        <div class="card card-custom p-4 bg-white">
+            <h5 class="fw-bold mb-3"><i class="bi bi-question-circle text-primary me-2"></i>Questions Preview</h5>
+            
+            {% if test.test_type == 'MCQ' %}
+                {% if mcq_questions %}
+                    <div class="accordion" id="mcqAccordion">
+                        {% for q in mcq_questions %}
+                            <div class="accordion-item mb-2 border rounded">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed py-2 small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#mcq{{ q.id }}">
+                                        Q{{ forloop.counter }}. {{ q.question_text|truncatechars:45 }} ({{ q.marks }}M)
+                                    </button>
+                                </h2>
+                                <div id="mcq{{ q.id }}" class="accordion-collapse collapse">
+                                    <div class="accordion-body small bg-light">
+                                        <p class="mb-2 fw-medium">{{ q.question_text }}</p>
+                                        <ul class="list-unstyled mb-2">
+                                            <li class="{% if q.correct_option == 'A' %}text-success fw-bold{% endif %}">A: {{ q.option_a }}</li>
+                                            <li class="{% if q.correct_option == 'B' %}text-success fw-bold{% endif %}">B: {{ q.option_b }}</li>
+                                            <li class="{% if q.correct_option == 'C' %}text-success fw-bold{% endif %}">C: {{ q.option_c }}</li>
+                                            <li class="{% if q.correct_option == 'D' %}text-success fw-bold{% endif %}">D: {{ q.option_d }}</li>
+                                        </ul>
+                                        <div class="text-muted small"><strong>Correct:</strong> Option {{ q.correct_option }}</div>
+                                        {% if q.explanation %}
+                                            <div class="text-muted small mt-1"><em>Explanation:</em> {{ q.explanation }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small">No questions generated yet.</p>
+                {% endif %}
+            {% else %}
+                {% if coding_questions %}
+                    {% for cq in coding_questions %}
+                        <div class="p-3 bg-light rounded border mb-3">
+                            <h6 class="fw-bold text-dark">{{ cq.title }}</h6>
+                            <p class="small text-muted mb-2">{{ cq.problem_statement|truncatechars:200 }}</p>
+                            <div class="small"><strong>Constraints:</strong> {{ cq.constraints|default:"None" }}</div>
+                            <div class="small"><strong>Marks:</strong> {{ cq.marks }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small">No coding problem attached.</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Student Attempts & Performance Table -->
+    <div class="col-lg-8">
+        <div class="card card-custom p-4 bg-white">
+            <h5 class="fw-bold mb-3"><i class="bi bi-people text-primary me-2"></i>Student Submissions & Integrity Status</h5>
+
+            {% if attempts %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>Student</th>
+                                <th>Roll Number</th>
+                                <th>Status</th>
+                                <th>Tab Violations</th>
+                                <th>Score</th>
+                                <th>Submission Time</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in attempts %}
+                                <tr>
+                                    <td class="fw-semibold">{{ attempt.student.full_name }}</td>
+                                    <td class="font-monospace text-primary small">{{ attempt.student.roll_number }}</td>
+                                    <td>
+                                        {% if attempt.status == 'SUBMITTED' %}
+                                            <span class="badge bg-success-subtle text-success">Submitted</span>
+                                        {% elif attempt.status == 'FORCE_SUBMITTED' %}
+                                            <span class="badge bg-danger">Terminated (Tab Switch)</span>
+                                        {% elif attempt.status == 'TIMED_OUT' %}
+                                            <span class="badge bg-warning text-dark">Timeout</span>
+                                        {% elif attempt.status == 'ABSENT' %}
+                                            <span class="badge bg-secondary">Absent</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if attempt.tab_switch_count > 0 %}
+                                            <span class="badge bg-danger-subtle text-danger fw-bold">{{ attempt.tab_switch_count }} Switch(es)</span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success">Clean (0)</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold fs-6">{{ attempt.total_score }}</span> / {{ attempt.max_marks }}
+                                    </td>
+                                    <td class="text-muted small">{{ attempt.submit_time|date:"M d, H:i"|default:"-" }}</td>
+                                    <td class="text-end">
+                                        <a href="{% url 'tests_module:test_result' attempt.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-card-text"></i> Result
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clock-history display-4 text-muted mb-3"></i>
+                    <h5 class="fw-bold">No Submissions Yet</h5>
+                    <p class="text-muted small">Once students attend and complete this test under proctored supervision, their scores, tab switch logs, and AI evaluation will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Batches | Student Performance Portal{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">
+            {% if is_admin %}
+                <i class="bi bi-collection me-2 text-primary"></i> Batch Management
+            {% else %}
+                <i class="bi bi-collection me-2 text-primary"></i> My Assigned Batches
+            {% endif %}
+        </h2>
+        <p class="text-muted mb-0">
+            {% if is_admin %}
+                Manage unique batches, assign staff members, and oversee cohort progress.
+            {% else %}
+                Batches assigned to you by the administration. Manage tests, interviews, and students.
+            {% endif %}
+        </p>
+    </div>
+    {% if is_admin %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'batches:create_staff' %}" class="btn btn-outline-primary">
+                <i class="bi bi-person-plus me-1"></i> Add Staff
+            </a>
+            <a href="{% url 'batches:batch_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Create Batch
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% if batches %}
+    <div class="row g-4">
+        {% for batch in batches %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-custom h-100 p-3 bg-white">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary-subtle text-primary fw-bold font-monospace px-2 py-1">
+                                {{ batch.batch_code }}
+                            </span>
+                            {% if batch.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">Archived</span>
+                            {% endif %}
+                        </div>
+
+                        <h4 class="card-title fw-bold text-dark mt-2 mb-1">{{ batch.batch_name }}</h4>
+                        <p class="text-muted small flex-grow-1">
+                            {{ batch.description|default:"No description provided."|truncatechars:100 }}
+                        </p>
+
+                        <hr class="my-2 text-muted opacity-25">
+
+                        <div class="row text-center my-2 g-2">
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-light">
+                                    <div class="fw-bold text-primary fs-5">{{ batch.students.count }}</div>
+                                    <div class="text-muted small">Students</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-light">
+                                    <div class="fw-bold text-secondary fs-5">{{ batch.staff_assignments.count }}</div>
+                                    <div class="text-muted small">Staff Assigned</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{% url 'batches:batch_detail' batch.id %}" class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="bi bi-folder-symlink me-1"></i> Open Batch
+                            </a>
+                            {% if is_admin %}
+                                <a href="{% url 'batches:batch_assign_staff' batch.id %}" class="btn btn-outline-secondary btn-sm" title="Assign Staff">
+                                    <i class="bi bi-person-gear"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card card-custom p-5 text-center bg-white">
+        <i class="bi bi-inbox text-muted display-4 mb-3"></i>
+        <h4 class="fw-bold">No Batches Found</h4>
+        <p class="text-muted">
+            {% if is_admin %}
+                Get started by creating your first unique batch.
+            {% else %}
+                No batches have been assigned to your staff account yet. Please contact the Super Admin.
+            {% endif %}
+        </p>
+        {% if is_admin %}
+            <div class="mt-2">
+                <a href="{% url 'batches:batch_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Create Batch
+                </a>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+

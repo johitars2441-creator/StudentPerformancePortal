@@ -125,10 +125,14 @@
         <!-- Student details -->
         <div class="card report-card shadow-sm mb-4">
             <div class="card-body">
-
-                <h4 class="fw-bold">
-                    {{ selected_student.full_name }}
-                </h4>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="fw-bold mb-0">
+                        {{ selected_student.full_name }}
+                    </h4>
+                    <a href="{% url 'download_student_pdf' selected_student.id %}" class="btn btn-outline-danger btn-sm no-print" target="_blank">
+                        Download PDF Report Card
+                    </a>
+                </div>
 
                 <div class="row g-2">
                     <div class="col-md-4">
